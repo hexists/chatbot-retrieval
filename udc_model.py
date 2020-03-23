@@ -26,6 +26,17 @@ def create_model_fn(hparams, model_impl):
     utterance, utterance_len = get_id_feature(
         features, "utterance", "utterance_len", hparams.max_utterance_len)
 
+    if mode == tf.contrib.learn.ModeKeys.INFER:
+      probs, loss = model_impl(
+          hparams,
+          mode,
+          context,
+          context_len,
+          utterance,
+          utterance_len,
+          None)
+      return probs, 0.0, None
+
     batch_size = targets.get_shape().as_list()[0]
 
     if mode == tf.contrib.learn.ModeKeys.TRAIN:
@@ -39,17 +50,6 @@ def create_model_fn(hparams, model_impl):
           targets)
       train_op = create_train_op(loss, hparams)
       return probs, loss, train_op
-
-    if mode == tf.contrib.learn.ModeKeys.INFER:
-      probs, loss = model_impl(
-          hparams,
-          mode,
-          context,
-          context_len,
-          utterance,
-          utterance_len,
-          None)
-      return probs, 0.0, None
 
     if mode == tf.contrib.learn.ModeKeys.EVAL:
 
